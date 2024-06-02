@@ -12,7 +12,7 @@ app.use(bodyParser.json()); // for parsing application/json
 
 // Replace 'YOUR_API_KEY' with your actual OpenAI API key
 const configuration = new Configuration({
-    apiKey: process.env.OPENAI_API_KEY || "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", // It's safer to use an environment variable for the API key
+    apiKey: process.env.OPENAI_API_KEY || "", // It's safer to use an environment variable for the API key
 });
 const openai = new OpenAIApi(configuration);
 
