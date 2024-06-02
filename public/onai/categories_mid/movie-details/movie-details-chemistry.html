@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kinopoisk</title>
+
+  <!-- 
+    - favicon
+  -->
+  <link rel="shortcut icon" href="../../favicon.svg" type="image/svg+xml">
+
+  <!-- 
+    - custom css link
+  -->
+  <link rel="stylesheet" href="../../assets/css/style.css">
+
+  <!-- 
+    - google font link
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+  <div class="sidebar">
+    <ul>
+      <li class="logo">
+        <span class="logo_picture"><img src="../../logo_sidebar.png" alt="sidebar"></span> 
+        <span class="text_name">Kinopoisk</span>
+      </li>
+
+
+      <li>
+        <a href="http://localhost:3000/onai/index.html">
+            <span class="icon"><ion-icon name="happy"></ion-icon></span>
+            <span class="text">Комедия</span>
+        </a>
+      </li>
+
+      <li>
+          <a href="http://localhost:3000/onai/mid.html">
+              <span class="icon"><ion-icon name="walk"></ion-icon></span>
+              <span class="text"><strong>Экшн</strong></span>
+          </a>
+      </li>
+
+      <li>
+          <a href="http://localhost:3000/onai/senior.html">
+              <span class="icon"><ion-icon name="school"></ion-icon></span>
+              <span class="text">Документальное</span>
+          </a>
+      </li>
+
+      <li>
+        <a href="http://localhost:3000/onai/drama.html">
+            <span class="icon"><ion-icon name="film-outline"></ion-icon></span>
+            <span class="text">Драма</span>
+        </a>
+      </li>
+
+    </ul>
+</div>
+
+
+  <!-- 
+    - #HEADER
+  -->
+
+  <header class="header" data-header>
+    <div class="container">
+
+      <div class="overlay" data-overlay></div>
+
+      <div class="header-actions">
+
+
+      </div>
+
+      <button class="menu-open-btn" data-menu-open-btn>
+        <ion-icon name="reorder-two"></ion-icon>
+      </button>
+
+      <nav class="navbar" data-navbar>
+
+        <div class="navbar-top">
+
+          <a href="../../index.html" class="logo">
+            <img src="../../assets/images/logo.svg" alt="Filmlane logo">
+          </a>
+
+          <button class="menu-close-btn" data-menu-close-btn>
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+
+        </div>
+
+        <ul class="navbar-list">
+
+          <li>
+            <a href="../../index.html" class="navbar-link">Главная</a>
+          </li>
+
+          <li>
+            <a href="../../categories_elementary/movies-category.html" class="navbar-link">Кинокаталог</a>
+          </li>
+
+          <li>
+            <a href="../../categories_elementary/articles-category.html" class="navbar-link">Статьи</a>
+          </li>
+
+        </ul>
+
+      </nav>
+
+    </div>
+  </header>
+
+
+
+
+
+
+
+  <main>
+    <article>
+
+      <!-- 
+        - #MOVIE DETAIL
+      -->
+      <div class="chemistry-movie-detail">
+      <section class="movie-detail">
+        <div class="container">
+
+          <figure class="movie-detail-banner">
+
+            <img src="../../assets/images/movie1-8.png" alt="History poster">
+
+          </figure>
+
+          <div class="movie-detail-content">
+
+            <h1 class="h1 detail-title">
+              Семь самураев
+            </h1>
+
+            <div class="meta-wrapper">
+
+              <div class="badge-wrapper">
+                <div class="badge badge-fill">"Экшн"</div>
+              </div>
+
+              <div class="date-time">
+
+                <div>
+                  <ion-icon name="calendar-outline"></ion-icon>
+
+                  <time datetime="2021">1954</time>
+                </div>
+
+                <div>
+                  <ion-icon name="time-outline"></ion-icon>
+
+                  <time datetime="PT115M">207 минут</time>
+                </div>
+
+              </div>
+
+            </div>
+
+            <p class="storyline"> 
+              Япония, XVI век. В стране полыхает гражданская война, повсюду орудуют банды разбойников и мародеров. Бедные крестьяне нанимают для защиты деревни семерых самураев, которые немного сплачивают раздробленных и малодушных селян в процессе подготовки и укрепления деревни.
+            </p>
+
+          </div>
+
+        </div>
+      </section>
+    </div>
+      
+      <div class="details-content">
+        <video controls width="65%" height="600px">
+        <source src="../videos/chemistry.mp4"  type="video/mp4">
+      </video>
+    </div>
+      
+
+  <!-- 
+    - #FOOTER
+  -->
+
+  <footer class="footer">
+
+    <div class="footer-top">
+      <div class="container">
+
+        <div class="footer-brand-wrapper">
+
+          <a href="../../index.html" class="logo">
+            <img src="../../assets/images/logo.svg" alt="Filmlane logo">
+          </a>
+
+          <ul class="footer-list">
+
+            <li>
+              <a href="../../index.html" class="footer-link">Главная</a>
+            </li>
+
+            <li>
+              <a href="../../categories_elementary/movies-category.html" class="footer-link">Кинокаталог</a>
+            </li>
+
+          
+
+            <li>
+              <a href="../../categories_elementary/articles-category.html" class="footer-link">Статьи</a>
+            </li>
+
+          </ul>
+
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="quicklink-wrapper">
+
+        </div>
+
+      </div>
+    </div>
+
+  </footer>
+
+
+
+
+
+  <!-- 
+    - #GO TO TOP
+  -->
+
+  <a href="#top" class="go-top" data-go-top>
+    <ion-icon name="chevron-up"></ion-icon>
+  </a>
+
+
+
+
+
+  <!-- 
+    - custom js link
+  -->
+  <script src="../../assets/js/script.js"></script>
+
+  <!-- 
+    - ionicon link
+  -->
+  <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+
+</body>
+
+</html>
