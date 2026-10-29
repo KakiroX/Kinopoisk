@@ -1,10 +1,10 @@
 {
-  "name": "reddit-mcp",
-  "version": "0.1.0",
-  "description": "MCP server that lets Claude read Reddit: threads with full comment trees, subreddit listings, search and user history",
+  "name": "social-mcp",
+  "version": "0.2.0",
+  "description": "MCP server that gives Claude read access to Reddit and X: threads with full reply trees, listings, search and user history",
   "type": "module",
   "bin": {
-    "reddit-mcp": "dist/src/index.js"
+    "social-mcp": "dist/src/index.js"
   },
   "files": [
     "dist/src"
@@ -12,6 +12,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/src/index.js",
+    "start:http": "node dist/src/index.js --http",
     "test": "tsc && node --test dist/test/*.test.js"
   },
   "engines": {

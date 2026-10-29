@@ -1,4 +1,4 @@
-import { RedditClient } from "./reddit.js";
+import { RedditClient } from "./client.js";
 import {
   Comment,
   Post,

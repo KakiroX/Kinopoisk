@@ -1,5 +1,7 @@
 // Turns Reddit's "thing" JSON into compact objects and renders them for Claude.
 
+import { indentText, truncate } from "../common.js";
+
 export interface Post {
   id: string;
   subreddit: string;
@@ -265,8 +267,6 @@ export function takeMoreIds(roots: Comment[], rootMore: Comment["more"] | undefi
 
 // ---------- rendering ----------
 
-const indentText = (text: string, pad: string) => text.replace(/\n/g, `\n${pad}`);
-
 export function renderPost(p: Post, opts: { bodyLimit?: number } = {}): string {
   const lines = [
     `## ${p.title}`,
@@ -317,10 +317,6 @@ export function renderListingItem(item: Post | Comment, opts: { bodyLimit?: numb
   ].join("\n");
 }
 
-function truncate(text: string, limit?: number): string {
-  if (!limit || text.length <= limit) return text;
-  return `${text.slice(0, limit)}… [${text.length - limit} more chars]`;
-}
 
 // ---------- input parsing ----------
 

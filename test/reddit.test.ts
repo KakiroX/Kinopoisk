@@ -1,17 +1,13 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import http from "node:http";
-import { AddressInfo } from "node:net";
-import { fileURLToPath } from "node:url";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import * as fx from "./fixtures.js";
-import { parsePostRef } from "../src/parse.js";
-import { RedditClient } from "../src/reddit.js";
+import * as fx from "./reddit-fixtures.js";
+import { closeAll, connectStdio, startFake, text, Reply } from "./helpers.js";
+import { parsePostRef } from "../src/reddit/parse.js";
+import { RedditClient } from "../src/reddit/client.js";
 
-const requests: { path: string; query: URLSearchParams; auth?: string }[] = [];
 let failNext429 = 0;
-let fake: http.Server;
+let fake: Awaited<ReturnType<typeof startFake>>;
+let requests: Awaited<ReturnType<typeof startFake>>["requests"];
 let base: string;
 
 function route(path: string, q: URLSearchParams): unknown {
@@ -19,7 +15,7 @@ function route(path: string, q: URLSearchParams): unknown {
   if (p === "/comments/abc123") return fx.thread;
   if (p === "/api/morechildren") {
     const ids = q.get("children")!.split(",");
-    return { json: { errors: [], data: { things: fx.moreChildren.json.data.things.filter((t) => ids.includes(t.data.id) || t.data.id === "c7") } } };
+    return { json: { errors: [], data: { things: fx.moreChildren.json.data.things.filter((t: any) => ids.includes(t.data.id) || t.data.id === "c7") } } };
   }
   if (p === "/r/test/new") {
     const after = q.get("after");
@@ -37,45 +33,24 @@ function route(path: string, q: URLSearchParams): unknown {
 }
 
 before(async () => {
-  fake = http.createServer((req, res) => {
-    const url = new URL(req.url!, "http://x");
-    if (url.pathname === "/api/v1/access_token") {
-      res.writeHead(200, { "content-type": "application/json" });
-      return res.end(JSON.stringify({ access_token: "tok123", expires_in: 3600 }));
-    }
-    requests.push({ path: url.pathname, query: url.searchParams, auth: req.headers.authorization });
+  fake = await startFake((path, q): Reply | undefined => {
+    if (path === "/api/v1/access_token") return { body: { access_token: "tok123", expires_in: 3600 } };
     if (failNext429 > 0) {
       failNext429--;
-      res.writeHead(429, { "retry-after": "0", "x-ratelimit-remaining": "0", "x-ratelimit-reset": "0" });
-      return res.end("Too Many Requests");
+      return { status: 429, headers: { "retry-after": "0", "x-ratelimit-remaining": "0", "x-ratelimit-reset": "0" }, body: "Too Many Requests" };
     }
-    const body = route(url.pathname, url.searchParams);
-    if (body === undefined) {
-      res.writeHead(404);
-      return res.end("{}");
-    }
-    res.writeHead(200, { "content-type": "application/json", "x-ratelimit-remaining": "99", "x-ratelimit-reset": "60" });
-    res.end(JSON.stringify(body));
+    const body = route(path, q);
+    return body === undefined ? undefined : { headers: { "x-ratelimit-remaining": "99", "x-ratelimit-reset": "60" }, body };
   });
-  await new Promise<void>((r) => fake.listen(0, "127.0.0.1", r));
-  base = `http://127.0.0.1:${(fake.address() as AddressInfo).port}`;
+  ({ base, requests } = fake);
 });
 
-after(() => fake.close());
+after(async () => {
+  await closeAll();
+  fake.close();
+});
 
-async function connect(extraEnv: Record<string, string> = {}) {
-  const transport = new StdioClientTransport({
-    command: process.execPath,
-    args: [fileURLToPath(new URL("../src/index.js", import.meta.url))],
-    env: { PATH: process.env.PATH!, REDDIT_PUBLIC_BASE: base, REDDIT_CACHE_TTL: "0", ...extraEnv },
-    stderr: "ignore",
-  });
-  const client = new Client({ name: "test", version: "0" });
-  await client.connect(transport);
-  return client;
-}
-
-const text = (r: any) => r.content[0].text as string;
+const connect = (extraEnv: Record<string, string> = {}) => connectStdio({ REDDIT_PUBLIC_BASE: base, ...extraEnv });
 
 test("lists all tools", async () => {
   const c = await connect();
@@ -191,4 +166,15 @@ test("client waits for the rate-limit window instead of failing", async () => {
   const start = Date.now();
   await rc.get("/b");
   assert.ok(Date.now() - start >= 900, "second request should wait for the reset");
+});
+
+test("unset options fall back to defaults", async () => {
+  let seen = "";
+  const fetchImpl = (async (url: string) => {
+    seen = url;
+    return new Response("{}", { status: 200 });
+  }) as unknown as typeof fetch;
+  const rc = new RedditClient({ userAgent: "t", fetchImpl, publicBase: undefined, cacheTtlMs: undefined });
+  await rc.get("/r/test/about");
+  assert.match(seen, /^https:\/\/www\.reddit\.com\/r\/test\/about\.json/);
 });

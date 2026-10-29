@@ -1,6 +1,8 @@
 // Thin Reddit API client: OAuth (when credentials are given) or the public
 // .json endpoints, with response caching, header-driven pacing and retries.
 
+import { sleep } from "../common.js";
+
 export interface RedditClientOptions {
   userAgent: string;
   clientId?: string;
@@ -23,8 +25,6 @@ export class RedditError extends Error {
 
 type Params = Record<string, string | number | boolean | undefined>;
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
 export class RedditClient {
   private readonly opts: Required<Omit<RedditClientOptions, "clientId" | "clientSecret" | "username" | "password">> &
     RedditClientOptions;
@@ -43,7 +43,7 @@ export class RedditClient {
       oauthBase: "https://oauth.reddit.com",
       tokenUrl: "https://www.reddit.com/api/v1/access_token",
       fetchImpl: globalThis.fetch.bind(globalThis),
-      ...options,
+      ...definedOnly(options),
     };
   }
 
@@ -188,4 +188,9 @@ function describeStatus(status: number, url: string): string {
     default:
       return `Reddit returned HTTP ${status} for ${path}.`;
   }
+}
+
+/** Drops undefined values so they don't override defaults when spread. */
+function definedOnly<T extends object>(obj: T): T {
+  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined)) as T;
 }
