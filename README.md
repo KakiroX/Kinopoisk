@@ -52,8 +52,6 @@ Open **Settings → Developer → Edit Config** and add:
       "command": "node",
       "args": ["/absolute/path/to/social-mcp/dist/src/index.js"],
       "env": {
-        "REDDIT_CLIENT_ID": "...",
-        "REDDIT_CLIENT_SECRET": "...",
         "X_BEARER_TOKEN": "..."
       }
     }
@@ -61,12 +59,14 @@ Open **Settings → Developer → Edit Config** and add:
 }
 ```
 
+Every key is optional. Without `X_BEARER_TOKEN` you get the Reddit tools only, and Reddit works without keys (see [Limits and costs](#limits-and-costs)).
+
 Restart Claude Desktop. The tools appear under the tools/connectors menu in a chat. Then try: *"Summarise the top arguments in https://www.reddit.com/r/... thread"*.
 
 ### Claude Code
 
 ```bash
-claude mcp add social -e REDDIT_CLIENT_ID=... -e REDDIT_CLIENT_SECRET=... -e X_BEARER_TOKEN=... -- node /absolute/path/to/dist/src/index.js
+claude mcp add social -e X_BEARER_TOKEN=... -- node /absolute/path/to/dist/src/index.js
 ```
 
 ### claude.ai (web and mobile) as a custom connector
@@ -82,7 +82,7 @@ claude.ai connects to remote servers over HTTPS, so run the server in HTTP mode 
 2. Start the server:
 
    ```bash
-   REDDIT_CLIENT_ID=... REDDIT_CLIENT_SECRET=... X_BEARER_TOKEN=... npm run start:http
+   X_BEARER_TOKEN=... npm run start:http
    ```
 
 3. Expose it. For a quick test from your own machine, a Cloudflare quick tunnel needs no account:
@@ -111,16 +111,90 @@ claude mcp add --transport http social https://host/mcp --header "Authorization:
 npx @modelcontextprotocol/inspector node dist/src/index.js
 ```
 
+## Run on a Raspberry Pi
+
+A Pi makes a good always-on host for the claude.ai connector. The server is plain JavaScript with no native modules, so it runs on any Pi that can run Node 18 or newer, and it idles at about 85 MB of memory.
+
+| Model | Works? |
+| --- | --- |
+| Pi 5, 4, 3, Zero 2 W | Yes. A 64-bit OS is best; 32-bit works too. |
+| Pi 1 or original Zero (ARMv6) | Only with an unofficial Node build. Not recommended. |
+
+Reddit is also less likely to block requests from a home connection than from a cloud server. That matters if you run without Reddit keys.
+
+**1. Install Node 22 and build:**
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+```
+
+```bash
+sudo apt-get install -y nodejs git
+```
+
+```bash
+git clone https://github.com/KakiroX/Kinopoisk.git social-mcp
+```
+
+```bash
+cd social-mcp && npm ci && npm run build
+```
+
+**2. Configure:**
+
+```bash
+cp .env.example .env && nano .env
+```
+
+The only line you need is `MCP_AUTH_TOKEN` (make one with `openssl rand -hex 24`). Add `X_BEARER_TOKEN` if you want the X tools. Leave the rest empty unless you have them.
+
+**3. Run it as a service** so it starts on boot and restarts after crashes. This installs `deploy/social-mcp.service` with your user and checkout path filled in:
+
+```bash
+sed "s#/home/pi/social-mcp#$PWD#g; s#^User=pi#User=$(id -un)#" deploy/social-mcp.service | sudo tee /etc/systemd/system/social-mcp.service
+```
+
+```bash
+sudo systemctl daemon-reload && sudo systemctl enable --now social-mcp
+```
+
+Check it:
+
+```bash
+curl localhost:3000/healthz
+```
+
+To see the logs:
+
+```bash
+journalctl -u social-mcp -f
+```
+
+**4. Give it a public HTTPS address.** Both options leave your router closed:
+
+- **Tailscale Funnel (recommended):** free, and the address stays the same. [Install Tailscale](https://tailscale.com/download/linux) on the Pi, run `sudo tailscale up`, then run `sudo tailscale funnel --bg 3000`. Your connector URL is `https://<pi-name>.<tailnet>.ts.net/mcp/<MCP_AUTH_TOKEN>`.
+- **Cloudflare quick tunnel:** `cloudflared tunnel --url http://localhost:3000` (ARM builds are on [Cloudflare's downloads page](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/)). The address changes every time it restarts, so it suits testing. A permanent Cloudflare address needs a domain on Cloudflare.
+
+Then add the URL in claude.ai under **Settings → Connectors → Add custom connector**, as described above.
+
+**Updating:**
+
+```bash
+git pull && npm ci && npm run build && sudo systemctl restart social-mcp
+```
+
+Docker also works on a Pi: the `node:22-alpine` base image has ARM versions. The setup above is lighter, though.
+
 ## Limits and costs
 
 **Reddit.** Reddit enforces limits per client:
 
 | Mode | How | Limit |
 | --- | --- | --- |
-| Unauthenticated | no env vars | about 10 requests/min per IP. Reddit often blocks this from cloud servers entirely. |
+| No keys (default) | no env vars | Free. About 10 requests/min per IP; the server waits and retries when it hits the limit. Reddit often blocks this from cloud servers, rarely from home connections. |
 | OAuth app | `REDDIT_CLIENT_ID` + `REDDIT_CLIENT_SECRET` | 100 requests/min |
 
-Create a free "script" app at <https://www.reddit.com/prefs/apps> and use OAuth, especially when deploying to a server.
+Reddit keys are optional. OAuth is free for personal, non-commercial use, but under Reddit's Responsible Builder Policy a new app needs Reddit's approval before it can read data, reportedly after a wait of weeks. If you already have an approved app, create a "script" app at <https://www.reddit.com/prefs/apps> and set the keys. Otherwise run without them. Commercial use needs a separate paid agreement with Reddit.
 
 **X.** X's API has been pay-per-use since February 2026, and there is no free read tier for new developers. Third-party guides put reads at about **$0.005 per post**; check the current rates in the X developer console. Get a bearer token at <https://console.x.com>. Every post the server reads counts toward your bill, including quoted posts it pulls in for context. To keep that under control:
 
