@@ -1,0 +1,19 @@
+# systemd unit for running social-mcp in HTTP mode, e.g. on a Raspberry Pi.
+# Install with the command in README.md ("Run on a Raspberry Pi"), which
+# fills in your user and checkout path.
+[Unit]
+Description=social-mcp (Reddit and X MCP server)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/social-mcp
+EnvironmentFile=/home/pi/social-mcp/.env
+Environment=MCP_TRANSPORT=http
+ExecStart=/usr/bin/node dist/src/index.js
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
